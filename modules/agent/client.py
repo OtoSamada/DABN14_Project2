@@ -176,6 +176,6 @@ def batch_process_customers(
         return pd.DataFrame(final_data)
 
     except Exception as e:
-        print(f"❌ Cerebras Error: {e}")
+        print(f"Cerebras Error: {e}")
         print(f"Raw model output:\n{output_text if 'output_text' in locals() else 'N/A'}")
         return pd.DataFrame()
