@@ -74,18 +74,21 @@ class BaselineEvaluator:
                 logger.warning(f"Product {product_key}, iteration {iteration}: No valid results")
                 return None
             
-            # Calculate metrics
-            acceptance_rate = (results_df['decision'] == 'accepted').sum() / len(results_df)
+            # Calculate metrics (decision is now 1/0)
+            acceptance_rate = (results_df['decision'] == 1).sum() / len(results_df)
             avg_satisfaction = results_df['satisfaction_score'].mean()
+            avg_profile_fit = results_df.get('profile_fit_score', pd.Series([0])).mean()
             
             logger.info(
                 f"Product {product_key}, iteration {iteration}/{self.n_iterations}: "
-                f"Accept={acceptance_rate:.2%}, Satisfaction={avg_satisfaction:.2f}"
+                f"Accept={acceptance_rate:.2%}, Satisfaction={avg_satisfaction:.2f}, "
+                f"ProfileFit={avg_profile_fit:.2f}"
             )
             
             return {
                 'acceptance_rate': acceptance_rate,
                 'avg_satisfaction': avg_satisfaction,
+                'avg_profile_fit_score': avg_profile_fit,
                 'sample_size': len(results_df)
             }
             
@@ -111,6 +114,7 @@ class BaselineEvaluator:
         
         iteration_results = []
         metrics = EvaluationMetrics(acceptance_rates=[], satisfaction_scores=[])
+        profile_fits = []
         
         # Run iterations with different random samples
         for iteration in range(self.n_iterations):
@@ -128,6 +132,7 @@ class BaselineEvaluator:
             if result:
                 metrics.acceptance_rates.append(result['acceptance_rate'])
                 metrics.satisfaction_scores.append(result['avg_satisfaction'])
+                profile_fits.append(result['avg_profile_fit_score'])
                 
                 iteration_results.append({
                     'product_key': product_key,
@@ -154,6 +159,8 @@ class BaselineEvaluator:
             'satisfaction_std': metrics.satisfaction_std,
             'satisfaction_min': min(metrics.satisfaction_scores),
             'satisfaction_max': max(metrics.satisfaction_scores),
+            'profile_fit_score_mean': sum(profile_fits) / len(profile_fits),
+            'profile_fit_score_std': pd.Series(profile_fits).std(),
         }
         
         logger.info(
@@ -161,7 +168,7 @@ class BaselineEvaluator:
             f"Acceptance={summary['acceptance_rate_mean']:.2%} "
             f"(±{summary['acceptance_rate_std']:.2%}), "
             f"Satisfaction={summary['satisfaction_mean']:.2f} "
-            f"(±{summary['satisfaction_std']:.2f})"
+            f"(±{summary['satisfaction_std']:.2f}), "
         )
         
         return summary, iteration_results
