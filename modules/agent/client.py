@@ -52,7 +52,7 @@ def batch_process_customers(
     api_key: str,
     model: str = "gpt-oss-120b",
     temperature: float = 0.1,
-    max_tokens: int = 4096,
+    max_tokens: int = 8192,
     use_system_prompt: bool = True
 ) -> pd.DataFrame:
     """
@@ -109,16 +109,17 @@ def batch_process_customers(
         PRODUCT OFFERINGS:
         {product_offerings}
 
-        ### TASK:
+       ### TASK:
         For each customer (in the exact input order), output a JSON array of {current_batch_size} objects with:
-        - "decision": "accepted" or "rejected"
+        - "decision": 1 (accepted) or 0 (rejected)
         - "satisfaction_score": integer from 1 to 10
         - "reason": string (max 10 words, focused on VALUE/NEED, not eligibility)
+        - "profile_fit_score": integer from 1 to 10 measuring how well this product matches their financial profile/goals (independent of satisfaction)
 
         ### OUTPUT FORMAT:
         Respond ONLY with a VALID JSON ARRAY. No other text. Example:
-        [{{"decision": "accepted", "satisfaction_score": 8, "reason": "Lower interest saves me money"}}, ...]
-    """.strip()
+        [{{"decision": 1, "satisfaction_score": 8, "reason": "Lower interest saves me money", "customer_value_12mo": 360, "bank_value_12mo": 120, "profile_fit_score": 9}}, ...]
+        """.strip()
 
     user_content = f"""
         ### INPUT DATA:
